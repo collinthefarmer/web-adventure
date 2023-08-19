@@ -1,0 +1,19 @@
+{
+  "name": "web-adventure",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^2.10.7",
+    "htmx.org": "^1.9.4"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.1"
+  }
+}

@@ -1,0 +1,164 @@
+---
+import { createLevel } from "../../api/node";
+import { Level } from "../../api/models/Level";
+
+export function getStaticPaths() {
+    const first = createLevel("first", "first desc");
+    const second = createLevel("second", "second desc", first, "N");
+    const third = createLevel("third", "second desc", second, "W");
+    const thirdB = createLevel("thirdB", "second desc", second, "N");
+    const thirdC = createLevel("thirdC", "second desc", second, "E");
+    const fourth = createLevel("fourth", "second desc", thirdC, "N");
+
+    const levels = [
+        first,
+        second,
+        third,
+        thirdB,
+        thirdC,
+        fourth
+    ];
+
+    return levels.map(n => ({
+        params: { path: n.path },
+        props: n
+    }));
+}
+
+const { path } = Astro.params;
+const level: Level = Astro.props;
+---
+<script>window["htmx"] = import("htmx.org");</script>
+<div class="path">
+    <nav class="from">
+        <div></div>
+        <div class="N">{level.exits["N"] &&
+            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["N"].path}>n</a>}</div>
+        <div></div>
+        <div class="W">{level.exits["W"] &&
+            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["W"].path}>w</a>}</div>
+        <div class="X"><span>You are here.</span></div>
+        <div class="E">{level.exits["E"] &&
+            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["E"].path}>e</a>}</div>
+        <div></div>
+        <div class="S">{level.exits["S"] &&
+            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["S"].path}>s</a>}</div>
+        <div></div>
+    </nav>
+    <nav class="to"></nav>
+</div>
+<style>
+    /* node styles */
+
+    .from {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+
+        border: 1px solid black;
+        width: var(--node-dim);
+        height: var(--node-dim);
+
+        border-radius: 100%;
+        overflow: hidden;
+    }
+
+    .from > div {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .from > div:not(.X):empty {
+        background-color: black;
+    }
+
+    .from > div > a {
+        text-transform: uppercase;
+        text-decoration: none;
+
+        display: block;
+        padding: 1em;
+        border-radius: 2em;
+        border: 1px dashed black;
+        aspect-ratio: 1;
+        cursor: pointer;
+    }
+
+    .from > div > a:visited {
+        color: initial;
+    }
+
+</style>
+<style>
+    :root {
+        --node-dim: 14em;
+    }
+
+    body > .path {
+        position: absolute;
+
+        bottom: 1em;
+        left: 50%;
+    }
+
+    .path {
+        position: relative;
+        display: flex;
+        flex-flow: column;
+    }
+
+    .to:empty {
+        display: none;
+    }
+
+    .from:has(+ .to:not(:empty)) > div > a {
+        visibility: hidden;
+    }
+
+    .from:has(+ .to:not(:empty)) > .X > span {
+        visibility: hidden;
+    }
+
+    /* Positioning nodes w/ shared exits: */
+
+    /* AKA: .from has a northern exit and .to has a southern exit (i.e., they share an exit) */
+    .path:has(> .from > .N:not(:empty)):has(> .to > .path > .from > .S:not(:empty)) > .to {
+        position: absolute;
+        bottom: var(--node-dim);
+    }
+
+    .path:has(> .from > .S:not(:empty)):has(> .to > .path > .from > .N:not(:empty)) > .to {
+        position: absolute;
+        top: var(--node-dim);
+    }
+
+    .path:has(> .from > .E:not(:empty)):has(> .to > .path > .from > .W:not(:empty)) > .to {
+        position: absolute;
+        left: var(--node-dim);
+    }
+
+    .path:has(> .from > .W:not(:empty)):has(> .to > .path > .from > .E:not(:empty)) > .to {
+        position: absolute;
+        right: var(--node-dim);
+    }
+
+    .path:has(> .to > .path) > .from {
+        opacity: .5;
+    }
+
+    .path:has(> .to > .path > .to > .path) > .from {
+        opacity: .2;
+    }
+
+    .path:has(> .to > .path > .to > .path > .to > .path) > .from {
+        opacity: .1;
+    }
+
+    /* Nodes which are more than 4 paths back should be hidden.*/
+    .path:has(> .to > .path > .to > .path > .to > .path > .to > .path) > .from {
+        visibility: hidden;
+    }
+</style>
