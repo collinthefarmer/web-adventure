@@ -29,40 +29,45 @@ const { path } = Astro.params;
 const level: Level = Astro.props;
 ---
 <script>window["htmx"] = import("htmx.org");</script>
-<div class="path">
+<div class="path" draggable="true">
     <fieldset class="from">
         <div></div>
         <div class="N">{level.exits["N"] &&
             <label>
-                n<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["N"].path}>
+                n<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click"
+                        hx-get={level?.exits["N"].path}>
             </label>
         }</div>
         <div></div>
         <div class="W">{level.exits["W"] &&
             <label>
-                w<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["W"].path}>
+                w<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click"
+                        hx-get={level?.exits["W"].path}>
             </label>
         }</div>
-        <div class="X"><span>You are here.</span></div>
+        <div class="X"><span></span></div>
         <div class="E">{level.exits["E"] &&
             <label>
-                e<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["E"].path}>
+                e<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click"
+                        hx-get={level?.exits["E"].path}>
             </label>
         }</div>
         <div></div>
         <div class="S">{level.exits["S"] &&
             <label>
-                s<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["S"].path}>
+                s<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click"
+                        hx-get={level?.exits["S"].path}>
             </label>
         }</div>
         <div></div>
     </fieldset>
-    <nav class="to"></nav>
+    <div class="to"></div>
 </div>
 <style>
     /* node styles */
 
     .from {
+        border: none;
         padding: 0;
         margin: 0;
 
@@ -70,7 +75,6 @@ const level: Level = Astro.props;
         grid-template-columns: 1fr 1fr 1fr;
         grid-template-rows: 1fr 1fr 1fr;
 
-        border: 1px solid black;
         width: var(--node-dim);
         height: var(--node-dim);
 
@@ -78,10 +82,6 @@ const level: Level = Astro.props;
         overflow: hidden;
     }
 
-    .from > legend {
-        position: absolute;
-        left: var(--node-dim);
-    }
 
     .from > div {
         display: flex;
@@ -91,10 +91,6 @@ const level: Level = Astro.props;
         text-align: center;
     }
 
-    .from > div:not(.X):empty {
-        background-color: black;
-    }
-
     .from > div > label {
         text-transform: uppercase;
         text-decoration: none;
@@ -102,9 +98,16 @@ const level: Level = Astro.props;
         display: block;
         padding: 1em;
         border-radius: 2em;
-        border: 1px dashed black;
         aspect-ratio: 1;
         cursor: pointer;
+    }
+
+    .from > .X > span {
+        width: 1em;
+        aspect-ratio: 1;
+
+        background-color: black;
+        border-radius: 1em;
     }
 
     .from > div > label > input {
@@ -125,8 +128,9 @@ const level: Level = Astro.props;
     body > .path {
         position: absolute;
 
-        bottom: 1em;
+        top: 50%;
         left: 50%;
+        transform: translate(-50%, -50%) rotate3d(1, 0, 0, 60deg);
     }
 
     .path {
@@ -140,10 +144,6 @@ const level: Level = Astro.props;
     }
 
     .from:has(+ .to:not(:empty)) label {
-        visibility: hidden;
-    }
-
-    .from:has(+ .to:not(:empty)) > .X > span {
         visibility: hidden;
     }
 
@@ -192,5 +192,48 @@ const level: Level = Astro.props;
     /* Nodes which are more than 4 paths back should be hidden.*/
     .path:has(> .to > .path > .to > .path > .to > .path > .to > .path) > .from {
         visibility: hidden;
+        pointer-events: none;
     }
 </style>
+<script>
+    const el = document.querySelector("body > .path");
+    el.addEventListener("mousedown", drag(el));
+
+    function dragMove(target, startPos: [number, number]): (ev) => void {
+        let [x, y] = startPos;
+
+        return (ev) => {
+            ev.preventDefault();
+            const { clientX, clientY } = ev;
+
+            const newX = x - clientX;
+            const newY = y - clientY;
+
+            x = clientX;
+            y = clientY;
+
+            target.style.left = `${target.offsetLeft - newX}px`;
+            target.style.top = `${target.offsetTop - newY}px`;
+        };
+    }
+
+
+    function drag(target) {
+        let dragFn;
+
+        const stopDrag = (ev) => {
+            ev.preventDefault();
+
+            document.removeEventListener("mousemove", dragFn);
+        };
+
+        return (ev) => {
+            ev.preventDefault();
+
+            dragFn = dragMove(target, [ev.clientX, ev.clientY]);
+            document.addEventListener("mousemove", dragFn);
+            document.addEventListener("mouseup", stopDrag);
+        };
+    }
+
+</script>
