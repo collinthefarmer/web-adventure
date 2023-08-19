@@ -30,27 +30,42 @@ const level: Level = Astro.props;
 ---
 <script>window["htmx"] = import("htmx.org");</script>
 <div class="path">
-    <nav class="from">
+    <fieldset class="from">
         <div></div>
         <div class="N">{level.exits["N"] &&
-            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["N"].path}>n</a>}</div>
+            <label>
+                n<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["N"].path}>
+            </label>
+        }</div>
         <div></div>
         <div class="W">{level.exits["W"] &&
-            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["W"].path}>w</a>}</div>
+            <label>
+                w<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["W"].path}>
+            </label>
+        }</div>
         <div class="X"><span>You are here.</span></div>
         <div class="E">{level.exits["E"] &&
-            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["E"].path}>e</a>}</div>
+            <label>
+                e<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["E"].path}>
+            </label>
+        }</div>
         <div></div>
         <div class="S">{level.exits["S"] &&
-            <a hx-target="next .to" hx-trigger="click" hx-get={level?.exits["S"].path}>s</a>}</div>
+            <label>
+                s<input type="radio" hx-push-url="true" hx-target="next .to" hx-trigger="click" hx-get={level?.exits["S"].path}>
+            </label>
+        }</div>
         <div></div>
-    </nav>
+    </fieldset>
     <nav class="to"></nav>
 </div>
 <style>
     /* node styles */
 
     .from {
+        padding: 0;
+        margin: 0;
+
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         grid-template-rows: 1fr 1fr 1fr;
@@ -61,6 +76,11 @@ const level: Level = Astro.props;
 
         border-radius: 100%;
         overflow: hidden;
+    }
+
+    .from > legend {
+        position: absolute;
+        left: var(--node-dim);
     }
 
     .from > div {
@@ -75,7 +95,7 @@ const level: Level = Astro.props;
         background-color: black;
     }
 
-    .from > div > a {
+    .from > div > label {
         text-transform: uppercase;
         text-decoration: none;
 
@@ -87,10 +107,15 @@ const level: Level = Astro.props;
         cursor: pointer;
     }
 
+    .from > div > label > input {
+        margin: 0;
+        padding: 0;
+        appearance: none;
+    }
+
     .from > div > a:visited {
         color: initial;
     }
-
 </style>
 <style>
     :root {
@@ -114,7 +139,7 @@ const level: Level = Astro.props;
         display: none;
     }
 
-    .from:has(+ .to:not(:empty)) > div > a {
+    .from:has(+ .to:not(:empty)) label {
         visibility: hidden;
     }
 
@@ -122,29 +147,36 @@ const level: Level = Astro.props;
         visibility: hidden;
     }
 
-    /* Positioning nodes w/ shared exits: */
 
-    /* AKA: .from has a northern exit and .to has a southern exit (i.e., they share an exit) */
-    .path:has(> .from > .N:not(:empty)):has(> .to > .path > .from > .S:not(:empty)) > .to {
+    /*
+    AKA:
+
+    .from has a northern exit and .to has a southern exit (i.e., they share an exit)
+    and the northern exit is checked
+    */
+    .path:has(> .from > .N:not(:empty) input:checked):has(> .to > .path > .from > .S:not(:empty)) > .to {
         position: absolute;
         bottom: var(--node-dim);
     }
 
-    .path:has(> .from > .S:not(:empty)):has(> .to > .path > .from > .N:not(:empty)) > .to {
+    .path:has(> .from > .S:not(:empty) input:checked):has(> .to > .path > .from > .N:not(:empty)) > .to {
         position: absolute;
         top: var(--node-dim);
     }
 
-    .path:has(> .from > .E:not(:empty)):has(> .to > .path > .from > .W:not(:empty)) > .to {
+    .path:has(> .from > .E:not(:empty) input:checked):has(> .to > .path > .from > .W:not(:empty)) > .to {
         position: absolute;
         left: var(--node-dim);
     }
 
-    .path:has(> .from > .W:not(:empty)):has(> .to > .path > .from > .E:not(:empty)) > .to {
+    .path:has(> .from > .W:not(:empty) input:checked):has(> .to > .path > .from > .E:not(:empty)) > .to {
         position: absolute;
         right: var(--node-dim);
     }
 
+    /*
+    Fade out nodes as they become further away.
+    */
     .path:has(> .to > .path) > .from {
         opacity: .5;
     }
